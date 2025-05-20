@@ -14,6 +14,9 @@ create table teachers(
     country varchar(255)
 );
 
+alter table teachers
+	add constraint check_tuoi check (age > 25);
+
 insert into classes (name)
 values ("12A1"), ("12A2"), ("12A3");
 
@@ -25,3 +28,9 @@ values
 ("John Cena", 42, "USA");
 
 select * from teachers;
+
+insert into teachers (name, age, country)
+values
+("Nguyen Van A", 10, "Vietnam");
+
+SELECT VERSION();
