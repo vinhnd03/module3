@@ -63,7 +63,7 @@ select A.*, D.* from Customer A
 join `Order` B on A.cID = b.cID 
 join OrderDetail C on B.oID = C.oID
 join Product D on C.pID = D.pID
-group by a.cId, d.pID;
+group by A.cId, D.pID;
 
 -- Hiển thị tên những khách hàng không mua bất kỳ một sản phẩm nào
 select A.* from Customer A 

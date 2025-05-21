@@ -104,3 +104,31 @@ select point,COUNT(*) AS so_luong from student where point > 5 group by point ha
 
 -- 10. Lấy ra danh sách học viên của lớp c1121g1 và sắp xếp tên học viên theo alphabet.
 select A.* from student A inner join class B on a.class_id = b.id where b.name = 'Lập trình Java' order by A.name asc;
+
+
+-- -----------------------------------------------------------------------------------------------------------
+
+-- 1. Hiện thị danh sách các lớp có học viên theo học và số lượng học viên của mỗi lớp
+select c.name, (select count(s.id) from student s where s.class_id = c.id) as so_luong from class c;
+
+-- 2. Tính điểm lớn nhất của mỗi các lớp
+select c.name, (select max(s.point) from student s where s.class_id = c.id) as diem_cao_nhat from class c;
+
+-- 3. Tình điểm trung bình của từng lớp
+select c.name, (select avg(s.point) from student s where s.class_id = c.id) as diem_cao_nhat from class c;
+
+-- 4. Lấy ra toàn bộ tên và ngày sinh các instructor và student ở CodeGym.
+select s.name from student s
+union
+select i.name from instructor i;
+
+-- 5. Lấy ra top 3 học viên có điểm cao nhất của trung tâm.
+select s.name, s.point from student s
+order by s.point desc
+limit 3;
+
+-- 6. Lấy ra các học viên có điểm số là cao nhất của trung tâm.
+select s.name, s.point from student s
+where s.point = (
+	select max(point) from student
+);
