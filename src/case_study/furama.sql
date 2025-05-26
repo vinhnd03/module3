@@ -383,5 +383,68 @@ having so_lan_su_dung = 1;
 -- 15. Hiển thi thông tin của tất cả nhân viên bao gồm ma_nhan_vien, ho_ten, ten_trinh_do, ten_bo_phan,
 --  so_dien_thoai, dia_chi mới chỉ lập được tối đa 3 hợp đồng từ năm 2020 đến 2021.
 
+select nv.ma_nhan_vien, nv.ho_ten, td.ten_trinh_do, bp.ten_bo_phan, nv.so_dien_thoai, nv.dia_chi from nhan_vien nv 
+left join trinh_do td on nv.ma_trinh_do = td.ma_trinh_do
+left join bo_phan bp on nv.ma_bo_phan = bp.ma_bo_phan
+left join hop_dong hd on nv.ma_nhan_vien = hd.ma_nhan_vien
+where year(hd.ngay_lam_hop_dong) between 2020 and 2021
+group by hd.ma_nhan_vien
+having count(hd.ma_hop_dong) <= 3;
+
+-- 16. Xóa những Nhân viên chưa từng lập được hợp đồng nào từ năm 2019 đến năm 2021.
+	delete from nhan_vien nv where nv.ma_nhan_vien not in 
+    (
+		select distinct hd.ma_nhan_vien from hop_dong hd where (year(hd.ngay_lam_hop_dong) between 2019 and 2021)
+    );
+    
+-- 17. Cập nhật thông tin những khách hàng có ten_loai_khach từ Platinum lên Diamond, 
+-- chỉ cập nhật những khách hàng đã từng đặt phòng với Tổng Tiền thanh toán trong năm 2021 là lớn hơn 10.000.000 VNĐ.
+	update khach_hang kh set kh.ma_loai_khach = 1 where kh.ma_khach_hang = 2
+    and kh.ma_khach_hang in (
+		select kh.ma_khach_hang from 
+       -- khach_hang kh join
+        hop_dong hd
+        left join hop_dong_chi_tiet hdct on hd.ma_hop_dong = hdct.ma_hop_dong
+        left join dich_vu_di_kem dvdk on hdct.ma_dich_vu_di_kem = dvdk.ma_dich_vu_di_kem
+        left join dich_vu dv on hd.ma_dich_vu = dv.ma_dich_vu
+        where year(hd.ngay_lam_hop_dong) = 2021
+		group by kh.ma_khach_hang 
+        having (ifnull(sum(dv.chi_phi_thue), 0) + ifnull(sum(dvdk.gia * hdct.so_luong), 0)) > 10000000
+    );
+
+-- 18. Xóa những khách hàng có hợp đồng trước năm 2021 (chú ý ràng buộc giữa các bảng).
+alter table hop_dong 
+add constraint FOREIGN KEY (ma_khach_hang) REFERENCES khach_hang(ma_khach_hang) on delete cascade;
+
+delete from khach_hang where ma_khach_hang in (
+	select ma_khach_hang from hop_dong where year(ngay_lam_hop_dong) < 2021 group by ma_khach_hang
+);
+
+-- 19. Cập nhật giá cho các dịch vụ đi kèm được sử dụng trên 10 lần trong năm 2020 lên gấp đôi.
+update dich_vu_di_kem set gia = (gia * 2) where ma_dich_vu_di_kem in (
+	select dvdk.ma_dich_vu_di_kem from dich_vu_di_kem dvdk
+	join hop_dong_chi_tiet hdct on dvdk.ma_dich_vu_di_kem = hdct.ma_dich_vu_di_kem
+	join hop_dong hd on hdct.ma_hop_dong = hd.ma_hop_dong
+	where year(hd.ngay_lam_hop_dong) > 2020
+	group by dvdk.ma_dich_vu_di_kem
+	having sum(hdct.so_luong) = 10
+);
+
+-- 20. Hiển thị thông tin của tất cả các nhân viên và khách hàng có trong hệ thống, 
+-- thông tin hiển thị bao gồm id (ma_nhan_vien, ma_khach_hang), ho_ten, email, so_dien_thoai, ngay_sinh, dia_chi.
+select ma_khach_hang, ho_ten, email, so_dien_thoai, ngay_sinh, dia_chi from khach_hang 
+union
+select ma_nhan_vien, ho_ten, email, so_dien_thoai, ngay_sinh, dia_chi from nhan_vien;
+
+-- 21. Tạo khung nhìn có tên là v_nhan_vien để lấy được thông tin của tất cả các nhân viên có địa chỉ là “Hải Châu”
+-- và đã từng lập hợp đồng cho một hoặc nhiều khách hàng bất kì với ngày lập hợp đồng là “12/12/2019”.
+create view v_nhan_vien as (
+	select nv.* from nhan_vien nv 
+    join hop_dong hd on nv.ma_nhan_vien = hd.ma_nhan_vien
+    where nv.dia_chi = "% Hải Châu %" and date(hd.ngay_lam_hop_dong) like "2019-12-12"
+);
+
+select * from v_nhan_vien
+
 
 

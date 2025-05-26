@@ -103,3 +103,8 @@ Delimiter //
 		delete from Products where id = id_product;
     end//
     Delimiter ;
+    
+    call create_product_sp('P006', 'Webcam', 80.00, 30, 'HD webcam', 'Available');
+    call update_product_by_id_sp(7, 'P099', 'Webcam', 80.00, 30, 'HD webcam', 'Available');
+    call delete_product_by_id_sp(7);
+    select * from products;
