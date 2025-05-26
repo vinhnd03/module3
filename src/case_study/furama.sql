@@ -441,10 +441,92 @@ select ma_nhan_vien, ho_ten, email, so_dien_thoai, ngay_sinh, dia_chi from nhan_
 create view v_nhan_vien as (
 	select nv.* from nhan_vien nv 
     join hop_dong hd on nv.ma_nhan_vien = hd.ma_nhan_vien
-    where nv.dia_chi = "% Hải Châu %" and date(hd.ngay_lam_hop_dong) like "2019-12-12"
+    where nv.dia_chi = "%Hải Châu%" and date(hd.ngay_lam_hop_dong) like "2019-12-12"
 );
 
-select * from v_nhan_vien
+drop view v_nhan_vien;
+
+-- 22. Thông qua khung nhìn v_nhan_vien thực hiện cập nhật địa chỉ thành “Liên Chiểu” 
+-- đối với tất cả các nhân viên được nhìn thấy bởi khung nhìn này.
+
+update v_nhan_vien set dia_chi = "Liên Chiểu" where ma_nhan_vien = 1;
+
+-- 23. Tạo Stored Procedure sp_xoa_khach_hang dùng để xóa thông tin của một khách hàng
+-- nào đó với ma_khach_hang được truyền vào như là 1 tham số của sp_xoa_khach_hang.
+
+delimiter //
+
+create procedure sp_xoa_khach_hang (IN id_khach_hang INT)
+begin
+	delete from khach_hang where ma_khach_hang = id_khach_hang;
+end //
+
+delimiter ;
+
+call sp_xoa_khach_hang(200);
+
+-- 24. Tạo Stored Procedure sp_them_moi_hop_dong dùng để thêm mới vào bảng hop_dong với yêu cầu
+--  sp_them_moi_hop_dong phải thực hiện kiểm tra tính hợp lệ của dữ liệu bổ sung, 
+--  với nguyên tắc không được trùng khóa chính và đảm bảo toàn vẹn tham chiếu đến các bảng liên quan.
+
+delimiter //
+
+create procedure sp_them_moi_hop_dong (
+	in ma_hd INT,
+    in ngay_lam_hd DATETIME,
+    in ngay_kt DATETIME,
+    in tien_dc DOUBLE,
+    in ma_nv INT,
+    in ma_kh INT,
+    in ma_dv INT
+)
+begin
+	if exists (select 1 from hop_dong where ma_hop_dong = ma_hd) then 
+    signal sqlstate '45000'
+    set message_text = "Lỗi: Mã hợp đồng đã tồn tại";
+    
+    elseif not exists (select 1 from nhan_vien where ma_nhan_vien = ma_nv) then
+    signal sqlstate '45000'
+    set message_text = "Lỗi: Mã nhân viên không tồn tại";
+    
+    elseif not exists (select 1 from khach_hang where ma_khach_hang = ma_kh) then
+    signal sqlstate '45000'
+    set message_text = "Lỗi: Mã Khách hàng không tồn tại";
+    
+    elseif not exists (select 1 from dich_vu where ma_dich_vu = ma_dv) then
+    signal sqlstate '45000'
+    set message_text = "Lỗi: Mã dịch vụ không tồn tại";
+    
+    else
+	insert into hop_dong ( ma_hop_dong, ngay_lam_hop_dong, ngay_ket_thuc,
+    tien_dat_coc, ma_nhan_vien, ma_khach_hang, ma_dich_vu)
+    values
+    (ma_hd, ngay_lam_hd, ngay_kt, tien_dc, ma_nv, ma_kh, ma_dv);
+    end if;
+end //
+
+delimiter ;
+
+call sp_them_moi_hop_dong (13, '2020-12-08', '2020-12-08', 0, 9, 1, 3);
+
+-- 25. Tạo Trigger có tên tr_xoa_hop_dong khi xóa bản ghi trong bảng hop_dong thì hiển thị
+--  tổng số lượng bản ghi còn lại có trong bảng hop_dong ra giao diện console của database.
+
+delimiter //
+
+create trigger tr_xoa_hop_dong
+after delete on hop_dong
+for each row
+begin
+	declare so_luong int;
+	select count(ma_hop_dong) into so_luong from hop_dong;
+    signal sqlstate '45000' set message_text = so_luong;
+end //
+
+delimiter ;
+
+
+
 
 
 
