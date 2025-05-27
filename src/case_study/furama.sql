@@ -32,9 +32,9 @@ CREATE TABLE nhan_vien (
     ma_vi_tri INT,
     ma_trinh_do INT,
     ma_bo_phan INT,
-    FOREIGN KEY (ma_vi_tri) REFERENCES vi_tri(ma_vi_tri),
-    FOREIGN KEY (ma_trinh_do) REFERENCES trinh_do(ma_trinh_do),
-    FOREIGN KEY (ma_bo_phan) REFERENCES bo_phan(ma_bo_phan)
+    FOREIGN KEY (ma_vi_tri) REFERENCES vi_tri(ma_vi_tri) on delete cascade,
+    FOREIGN KEY (ma_trinh_do) REFERENCES trinh_do(ma_trinh_do) on delete cascade,
+    FOREIGN KEY (ma_bo_phan) REFERENCES bo_phan(ma_bo_phan) on delete cascade
 );
 
 -- Bảng loại khách
@@ -54,7 +54,7 @@ CREATE TABLE khach_hang (
     so_dien_thoai VARCHAR(45),
     email VARCHAR(45),
     dia_chi VARCHAR(45),
-    FOREIGN KEY (ma_loai_khach) REFERENCES loai_khach(ma_loai_khach)
+    FOREIGN KEY (ma_loai_khach) REFERENCES loai_khach(ma_loai_khach) on delete cascade
 );
 
 -- Bảng loại dịch vụ
@@ -82,8 +82,8 @@ CREATE TABLE dich_vu (
     mo_ta_tien_nghi_khac VARCHAR(45),
     dien_tich_ho_boi DOUBLE,
     so_tang INT,
-    FOREIGN KEY (ma_kieu_thue) REFERENCES kieu_thue(ma_kieu_thue),
-    FOREIGN KEY (ma_loai_dich_vu) REFERENCES loai_dich_vu(ma_loai_dich_vu)
+    FOREIGN KEY (ma_kieu_thue) REFERENCES kieu_thue(ma_kieu_thue) on delete cascade,
+    FOREIGN KEY (ma_loai_dich_vu) REFERENCES loai_dich_vu(ma_loai_dich_vu) on delete cascade
 );
 
 -- Bảng hợp đồng
@@ -95,9 +95,9 @@ CREATE TABLE hop_dong (
     ma_nhan_vien INT,
     ma_khach_hang INT,
     ma_dich_vu INT,
-    FOREIGN KEY (ma_nhan_vien) REFERENCES nhan_vien(ma_nhan_vien),
-    FOREIGN KEY (ma_khach_hang) REFERENCES khach_hang(ma_khach_hang),
-    FOREIGN KEY (ma_dich_vu) REFERENCES dich_vu(ma_dich_vu)
+    FOREIGN KEY (ma_nhan_vien) REFERENCES nhan_vien(ma_nhan_vien) on delete cascade,
+    FOREIGN KEY (ma_khach_hang) REFERENCES khach_hang(ma_khach_hang) on delete cascade,
+    FOREIGN KEY (ma_dich_vu) REFERENCES dich_vu(ma_dich_vu) on delete cascade
 );
 
 -- Bảng dịch vụ đi kèm
@@ -116,8 +116,8 @@ CREATE TABLE hop_dong_chi_tiet (
     ma_hop_dong INT,
     ma_dich_vu_di_kem INT,
     so_luong INT,
-    FOREIGN KEY (ma_hop_dong) REFERENCES hop_dong(ma_hop_dong),
-    FOREIGN KEY (ma_dich_vu_di_kem) REFERENCES dich_vu_di_kem(ma_dich_vu_di_kem)
+    FOREIGN KEY (ma_hop_dong) REFERENCES hop_dong(ma_hop_dong) on delete cascade,
+    FOREIGN KEY (ma_dich_vu_di_kem) REFERENCES dich_vu_di_kem(ma_dich_vu_di_kem) on delete cascade
 );
 
 
@@ -324,11 +324,11 @@ where year(hd.ngay_lam_hop_dong) = 2021 group by thang order by thang;
 -- 10. Hiển thị thông tin tương ứng với từng hợp đồng thì đã sử dụng bao nhiêu dịch vụ đi kèm.
 -- Kết quả hiển thị bao gồm ma_hop_dong, ngay_lam_hop_dong, ngay_ket_thuc, tien_dat_coc, so_luong_dich_vu_di_kem
 -- (được tính dựa trên việc sum so_luong ở dich_vu_di_kem).
-select hd.ma_hop_dong, hd.ngay_lam_hop_dong, hd.ngay_ket_thuc, hd.tien_dat_coc, 
+select hd.ma_hop_dong, (dvdk.ten_dich_vu_di_kem) as dich_vu_di_kem, hd.ngay_lam_hop_dong, hd.ngay_ket_thuc, hd.tien_dat_coc, 
 ifnull(sum(hdct.so_luong), 0) as so_luong_dich_vu_di_kem from hop_dong hd
 left join hop_dong_chi_tiet hdct on hd.ma_hop_dong = hdct.ma_hop_dong
 left join dich_vu_di_kem dvdk on hdct.ma_dich_vu_di_kem = dvdk.ma_dich_vu_di_kem
-group by hd.ma_hop_dong;
+group by dvdk.ma_dich_vu_di_kem, hd.ma_hop_dong;
 
 -- 11. Hiển thị thông tin các dịch vụ đi kèm đã được sử dụng bởi những khách hàng 
 -- có ten_loai_khach là “Diamond” và có dia_chi ở “Vinh” hoặc “Quảng Ngãi”.
@@ -359,12 +359,17 @@ group by hd.ma_hop_dong;
 
 -- 13. Hiển thị thông tin các Dịch vụ đi kèm được sử dụng nhiều nhất bởi các Khách hàng đã đặt phòng.
 -- (Lưu ý là có thể có nhiều dịch vụ có số lần sử dụng nhiều như nhau
-select dvdk.ma_dich_vu_di_kem, dvdk.ten_dich_vu_di_kem, sum(hdct.so_luong) so_luong_dich_vu_di_kem
+select dvdk.ma_dich_vu_di_kem, dvdk.ten_dich_vu_di_kem, sum(hdct.so_luong) as so_luong_dich_vu_di_kem
  from dich_vu_di_kem dvdk 
 join hop_dong_chi_tiet hdct on dvdk.ma_dich_vu_di_kem = hdct.ma_dich_vu_di_kem
 where dvdk.ma_dich_vu_di_kem in 
-(select ma_dich_vu_di_kem from hop_dong_chi_tiet group by ma_dich_vu_di_kem having sum(so_luong) = 
-(select sum(so_luong) from hop_dong_chi_tiet group by ma_hop_dong_chi_tiet order by sum(so_luong) desc limit 1))
+	(
+	select ma_dich_vu_di_kem 
+	from hop_dong_chi_tiet 
+	group by ma_dich_vu_di_kem 
+	having sum(so_luong) = 
+						(select sum(so_luong) from hop_dong_chi_tiet group by ma_hop_dong_chi_tiet order by sum(so_luong) desc limit 1)
+	)
 group by dvdk.ma_dich_vu_di_kem;
 
 -- 14. Hiển thị thông tin tất cả các Dịch vụ đi kèm chỉ mới được sử dụng một lần duy nhất. 

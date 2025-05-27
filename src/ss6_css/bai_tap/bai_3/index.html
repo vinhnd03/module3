@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <style>
+        body{
+            background-color: rgb(156, 156, 156);
+        }
+        .container{
+            background-color: whitesmoke;
+            width: 50%;
+            position: relative;
+            margin: 0;
+            transform: translate(-50%, 0);
+            left: 50%;
+            align-items: center;
+        }
+        .list{
+            position: relative;
+            width: 200px;
+            left: 50%;
+            transform: translate(-50%, 0);
+            font-size: 30px;
+        }
+
+        .list a {
+            text-decoration: none;
+            font-weight: bold;
+            color: green;
+        }
+
+        .list a:hover{
+            color: red;
+        }
+
+        .list li {
+            
+        }
+
+        .joker-img{
+            width: 100%;
+            display: block;
+            text-align: center;
+            border-bottom: 2px solid black;
+            border-top: 2px solid black;
+            /* margin: 5px; */
+        }
+
+        .joker-img img {
+            width: 50%;
+        }
+
+        .joker-img p {
+            font-weight: 600;
+            font-size: 50px;
+            color: coral;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="list">
+        <ol>
+            <li> <a href="#joker1">Canio</a></li>
+            <li> <a href="#joker2">Triboulet</a></li>
+            <li> <a href="#joker3">Yorick</a></li>
+            <li> <a href="#joker4">Chicot</a></li>
+            <li> <a href="#joker5">Perkeo</a></li>
+        </ol>
+    </div>
+    <div id="joker1" class="joker-img">
+        <p>Canio</p>
+        <img src="https://oyster.ignimgs.com/mediawiki/apis.ign.com/balatro/7/75/Canio.png?width=640"
+            alt="">
+    </div>
+    <div id="joker2" class="joker-img">
+        <p>Triboulet</p>
+        <img src="https://oyster.ignimgs.com/mediawiki/apis.ign.com/balatro/9/9f/Triboulet.png?width=640"
+            alt="">
+    </div>
+    <div id="joker3" class="joker-img">
+        <p>Yorick</p>
+        <img src="https://oyster.ignimgs.com/mediawiki/apis.ign.com/balatro/a/ad/Yorick.png?width=640"
+            alt="">
+    </div>
+    <div id="joker4" class="joker-img">
+        <p>Chicot</p>
+        <img src="https://oyster.ignimgs.com/mediawiki/apis.ign.com/balatro/8/8e/Chicot.png?width=640"
+            alt="">
+    </div>
+    <div id="joker5" class="joker-img">
+        <p>Perkeo</p>
+        <img src="https://oyster.ignimgs.com/mediawiki/apis.ign.com/balatro/6/60/Perkeo.png?width=640"
+            alt="">
+    </div>
+    </div>
+    
+</body>
+
+</html>
