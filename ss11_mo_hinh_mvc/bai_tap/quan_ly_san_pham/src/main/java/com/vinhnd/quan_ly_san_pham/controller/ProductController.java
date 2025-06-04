@@ -36,7 +36,13 @@ public class ProductController extends HttpServlet {
                     req.setAttribute("product", product);
                     req.getRequestDispatcher("/view/form.jsp").forward(req, resp);
                 }
-
+            case "search":
+                String searchName = req.getParameter("searchName");
+                if(searchName != null){
+                    List<Product> products = productService.findByName(searchName);
+                    req.setAttribute("products", products);
+                    req.getRequestDispatcher("/view/list.jsp").forward(req,resp);
+                }
             default:
                 List<Product> products = productService.findAll();
                 req.setAttribute("products", products);
@@ -66,16 +72,7 @@ public class ProductController extends HttpServlet {
                 detail(req, resp);
                 break;
             default:
-                String searchName = req.getParameter("searchName");
-                System.out.println(searchName);
-                if(searchName != null){
-                       List<Product> products = productService.findByName(searchName);
-                       req.setAttribute("products", products);
-                       req.getRequestDispatcher("/view/list.jsp").forward(req,resp);
-                }else{
-                    resp.sendRedirect("/product");
-                }
-
+                resp.sendRedirect("/product");
         }
     }
 

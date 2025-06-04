@@ -5,7 +5,8 @@
     <title>Title</title>
 </head>
 <body>
-<form method="post">
+<form method="get" action="/product">
+    <input type="hidden" name="action" value="search">
     <label for="searchName">Nhập tên: </label>
     <input type="text" name="searchName" id="searchName">
     <input type="submit" value="Tìm kiếm">
