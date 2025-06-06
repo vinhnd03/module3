@@ -25,4 +25,6 @@ public interface IProductService {
     List<ProductDto> findAllProductWithCategory();
 
     List<ProductDto> findByNameOrCategoryName(String keyword);
+
+    List<Product> findByNameAndCategoryId(String name, Integer categoryId);
 }

@@ -266,4 +266,34 @@ public class ProductRepository implements IProductRepository {
         return productDtoList;
     }
 
+    @Override
+    public List<Product> findByNameAndCategoryId(String name, Integer categoryId) {
+        String sql = "select * from products where name like ? and category_id = ?";
+        List<Product> products = new ArrayList<>();
+        try(Connection connection = DatabaseUtil.getConnection();
+            PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setString(1, "%" + name + "%");
+            statement.setInt(2, categoryId);
+
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()){
+                Product product = new Product();
+                product.setId(resultSet.getInt("id"));
+                product.setName(resultSet.getString("name"));
+                product.setPrice(resultSet.getFloat("price"));
+                product.setStatus(resultSet.getBoolean("status"));
+                product.setCategoryId(resultSet.getInt("category_id"));
+
+                products.add(product);
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return products;
+    }
+
+
 }

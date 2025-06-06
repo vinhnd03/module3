@@ -26,14 +26,13 @@ public class ProductController extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         req.setCharacterEncoding("UTF-8");
         List<Category> categories = categoryService.findAll();
+        req.setAttribute("categories", categories);
         String action = req.getParameter("action");
         if (action == null) {
             action = "";
         }
         switch (action) {
             case "add":
-
-                req.setAttribute("categories", categories);
                 req.getRequestDispatcher("/view/form.jsp").forward(req, resp);
                 break;
             case "edit":
@@ -43,48 +42,35 @@ public class ProductController extends HttpServlet {
                     resp.sendRedirect("/product?action=add");
                 } else {
                     req.setAttribute("product", product);
-                    req.setAttribute("categories", categories);
                     req.getRequestDispatcher("/view/form.jsp").forward(req, resp);
                 }
             case "search":
-                String searchName = req.getParameter("searchName");
-                if(searchName != null){
-                    List<ProductDto> products = productService.findByNameOrCategoryName(searchName);
-                    req.setAttribute("productDtos", products);
-                    req.getRequestDispatcher("/view/list2.jsp").forward(req,resp);
-                }
+                search(req,resp);
                 break;
             default:
-                int page = 1;
-                int size = 5;
-
-                int totalItems = productService.count();
-                int totalPages = (int) Math.ceil((double) totalItems / size);
-                String pageParam = req.getParameter("page");
-
-                if(pageParam != null){
-                    try {
-                        if(Integer.parseInt(pageParam) > totalPages || Integer.parseInt(pageParam) < 1){
-                            page = 1;
-                        }else{
-                            page = Integer.parseInt(pageParam);
-                        }
-                    } catch (NumberFormatException e){
-                        page = 1;
-                    }
-                }
-
-                int offset = (page - 1) * size;
-
-                List<Product> products = productService.findPaginated(offset, size);
-
-                req.setAttribute("products", products);
-                req.setAttribute("currentPage", page);
-                req.setAttribute("totalPage", totalPages);
-
-                req.getRequestDispatcher("/view/list.jsp").forward(req, resp);
+                paginate(req,resp);
         }
 
+    }
+
+    private void search(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String searchName = req.getParameter("searchName");
+
+        if(searchName != null){
+            List<Product> products;
+            Integer categoryId = Integer.valueOf(req.getParameter("categoryId"));
+
+            if(categoryId != 0){
+                products = productService.findByNameAndCategoryId(searchName, categoryId);
+            }else{
+                products = productService.findByName(searchName);
+            }
+
+            req.setAttribute("searchName", searchName);
+            req.setAttribute("categoryId", categoryId);
+            req.setAttribute("products", products);
+            req.getRequestDispatcher("/view/list.jsp").forward(req,resp);
+        }
     }
 
     @Override
@@ -112,8 +98,35 @@ public class ProductController extends HttpServlet {
         }
     }
 
-    private void search(HttpServletRequest req, HttpServletResponse resp) {
+    private void paginate(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        int page = 1;
+        int size = 5;
 
+        int totalItems = productService.count();
+        int totalPages = (int) Math.ceil((double) totalItems / size);
+        String pageParam = req.getParameter("page");
+
+        if(pageParam != null){
+            try {
+                if(Integer.parseInt(pageParam) > totalPages || Integer.parseInt(pageParam) < 1){
+                    page = 1;
+                }else{
+                    page = Integer.parseInt(pageParam);
+                }
+            } catch (NumberFormatException e){
+                page = 1;
+            }
+        }
+
+        int offset = (page - 1) * size;
+
+        List<Product> products = productService.findPaginated(offset, size);
+
+        req.setAttribute("products", products);
+        req.setAttribute("currentPage", page);
+        req.setAttribute("totalPage", totalPages);
+
+        req.getRequestDispatcher("/view/list.jsp").forward(req, resp);
     }
 
     private void detail(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
@@ -128,7 +141,7 @@ public class ProductController extends HttpServlet {
     }
 
     private void delete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        Integer id = Integer.valueOf(req.getParameter("id"));
+        Integer id = Integer.valueOf(req.getParameter("deleteId"));
         Product product = productService.findById(id);
         productService.delete(product);
         resp.sendRedirect("/product");
